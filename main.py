@@ -62,12 +62,22 @@ def search_details(regex: str):
     return [dict(row._mapping) for row in result]
 
 @app.get("/products/")
-def read_products():
+def read_products(limit: int = 10, offset: int = 0):
     db = SessionLocal()
-    query = text("SELECT id, name, price, category_id, details FROM products")
-    result = db.execute(query).fetchall()
+    query = text("""
+        SELECT id, name, price, category_id, details 
+        FROM products 
+        LIMIT :limit OFFSET :offset
+    """)
+    result = db.execute(query, {"limit": limit, "offset": offset}).fetchall()
+    total = db.execute(text("SELECT COUNT(*) FROM products")).scalar()
     db.close()
-    return [dict(row._mapping) for row in result]
+    return {
+        "total_count": total,
+        "limit": limit,
+        "offset": offset,
+        "data": [dict(row._mapping) for row in result]
+    }
 
 @app.put("/products/{product_id}")
 def update_product(product_id: int, item: ProductSchema):
@@ -133,3 +143,20 @@ def get_sorted(order: str = "asc"):
     result = db.execute(text(sql_text)).fetchall()
     db.close()
     return [dict(row._mapping) for row in result]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
